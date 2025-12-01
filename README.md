@@ -4,3 +4,5 @@ This repository is a copy of the TimeGraph project originally created by Md. Has
 
 Upstream (original) repository
 - Original: [https://github.com/hferdous/TimeGraph/tree/main](https://github.com/hferdous/TimeGraph/tree/main)
+
+Please reference the upstream repository and respect the upstream license.
