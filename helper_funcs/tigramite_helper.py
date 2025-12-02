@@ -30,7 +30,7 @@ def string_checker(matrix):
     
 
 
-dict_for_score={'-->':1 , '<--':1, 'o->':2, '<-o':2, '' :0, 'o-o':2}
+dict_for_score={'-->':1 , '<--':1, 'o->':2, '<-o':2, '' :0, 'o-o':3}
 
 def get_score_dict():
     return dict_for_score

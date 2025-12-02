@@ -13,24 +13,37 @@ def parse_lagged_name(name: str) -> Tuple[str,int]:
 
 # mapping from observed (a,b) pair to enumerated type number
 # this is from ### https://rdrr.io/cran/pcalg/man/amatType.html#:~:text=in%20Package%20'pcalg'-,In%20pcalg:%20Methods%20for%20Graphical%20Models%20and%20Causal%20Inference,gac%20and%20the%20examples%20below).
-edge_to_type = {
+# edge_to_type = {
+#     (2, 3): 1,   # a --> b
+#     (3, 2): 2,   # a <-- b
+#     # (2, 2): 3,   # a <-> b
+#     # (1, 3): 4,   # a --o b
+#     (0, 0): 5,   # no link
+# }
+
+
+# def get_edge_type(a_uv: int, a_vu: int) -> int:
+#     return edge_to_type
+
+dict_for_score = {
     (2, 3): 1,   # a --> b
-    (3, 2): 2,   # a <-- b
-    (2, 2): 3,   # a <-> b
-    # (1, 3): 4,   # a --o b
-    (0, 0): 5,   # no link
+    (3, 2): 1,   # a <-- b
+    # (1, 1): 2,   # a o-o b
+    (0, 0): 0,   # no link
 }
-
-
-def get_edge_type(a_uv: int, a_vu: int) -> int:
-    return edge_to_type
 
 def check_edge_type(a_uv: int, a_vu: int) -> bool:
     """Given endpoint codes at u and v sides, return the edge type number."""
     key = (a_uv, a_vu)
-    if key not in edge_to_type.keys():
+    if key not in dict_for_score.keys():
         raise ValueError(f"Invalid endpoint code pair: {key}")
     return True
+
+
+
+# def get_score_dict():
+#     return dict_for_score
+
 
 ### interpretation of the arrows and tail encoding
 ### https://rdrr.io/cran/pcalg/man/amatType.html#:~:text=in%20Package%20'pcalg'-,In%20pcalg:%20Methods%20for%20Graphical%20Models%20and%20Causal%20Inference,gac%20and%20the%20examples%20below).
@@ -102,8 +115,8 @@ def adjmatrix_to_causal_tensor(adj_df: pd.DataFrame, strict: bool = True):
     # Permissive mode: u -> v if a_uv == 2 and a_vu != 0 (some mark on v side).
     for u_name in names:
         for v_name in names:
-            if u_name == v_name:
-                continue
+            # if u_name == v_name:
+            #     continue
             a_uv = int(adj_df.at[u_name, v_name])
             a_vu = int(adj_df.at[v_name, u_name])
             if a_uv == NULL and a_vu == NULL:
@@ -111,16 +124,19 @@ def adjmatrix_to_causal_tensor(adj_df: pd.DataFrame, strict: bool = True):
 
             if check_edge_type(a_uv, a_vu) is not True:
                 raise ValueError(f"Invalid endpoint codes for pair ({u_name}, {v_name}): ({a_uv}, {a_vu})")
-
+            else:
+                edge_score = dict_for_score[(a_uv, a_vu)]
             # Determine directedness
             is_u_to_v = False
             if strict:
                 if a_uv == TAIL and a_vu == ARROW:
                     is_u_to_v = True
-            else:
-                # permissive: any ARROW at u side counts as arrow from u to v if v side non-null
-                if a_uv != NULL and a_vu == ARROW:
-                    is_u_to_v = True
+                # elif (a_uv == CIRCLE and a_vu == CIRCLE):  ### this is to check unknown direction
+                #     is_u_to_v = True
+            # else:
+            #     # permissive: any ARROW at u side counts as arrow from u to v if v side non-null
+            #     if a_uv != NULL and a_vu == ARROW:
+            #         is_u_to_v = True
 
             if not is_u_to_v:
                 continue
@@ -143,14 +159,20 @@ def adjmatrix_to_causal_tensor(adj_df: pd.DataFrame, strict: bool = True):
             # If normalized_lag < 0, that would be an edge from a future node to a past node (shouldn't occur).
             if normalized_lag < 0:
                 # skip or continue (could also record with sign)
-                print(f"Warning: skipping edge from {u_name} to {v_name} with negative normalized lag {normalized_lag}")
+                # print(f"Warning: skipping edge from {u_name} to {v_name} with negative normalized lag {normalized_lag}")
+                raise ValueError(f"Future->past edge detected: {u_name} -> {v_name} with normalized_lag={normalized_lag} "
+                                 f"(src_lag={src_lag}, tgt_lag={tgt_lag})."
+    )
 
             if normalized_lag > L:
                 # shouldn't happen but guard
-                print(f"Warning: skipping edge from {u_name} to {v_name} with normalized lag {normalized_lag} > max lag {L}")
-                continue
+                # print(f"Warning: skipping edge from {u_name} to {v_name} with normalized lag {normalized_lag} > max lag {L}")
+                # continue
+                raise ValueError(f"Normalized lag {normalized_lag} for {u_name} -> {v_name} exceeds max lag {L} "
+                                 f"(src_lag={src_lag}, tgt_lag={tgt_lag})."
+    )
 
-            tensor[src_idx, tgt_idx, normalized_lag] = True
+            tensor[src_idx, tgt_idx, normalized_lag] = edge_score
 
     info = {
         "base_variables": base_order,
