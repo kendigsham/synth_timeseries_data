@@ -1,5 +1,7 @@
 import numpy as np
 
+def convert_true_graph_to_int(true_graph_matrix):
+    return true_graph_matrix.astype(int)
 
 
 def confusion_counts(gt_bool, pred_bool):

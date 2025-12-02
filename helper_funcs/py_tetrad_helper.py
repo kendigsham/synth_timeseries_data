@@ -11,9 +11,30 @@ def parse_lagged_name(name: str) -> Tuple[str,int]:
         return name, 0
     return m.group(1), int(m.group(2))
 
+# mapping from observed (a,b) pair to enumerated type number
+# this is from ### https://rdrr.io/cran/pcalg/man/amatType.html#:~:text=in%20Package%20'pcalg'-,In%20pcalg:%20Methods%20for%20Graphical%20Models%20and%20Causal%20Inference,gac%20and%20the%20examples%20below).
+edge_to_type = {
+    (2, 3): 1,   # a --> b
+    (3, 2): 2,   # a <-- b
+    (2, 2): 3,   # a <-> b
+    # (1, 3): 4,   # a --o b
+    (0, 0): 5,   # no link
+}
+
+
+def get_edge_type(a_uv: int, a_vu: int) -> int:
+    return edge_to_type
+
+def check_edge_type(a_uv: int, a_vu: int) -> bool:
+    """Given endpoint codes at u and v sides, return the edge type number."""
+    key = (a_uv, a_vu)
+    if key not in edge_to_type.keys():
+        raise ValueError(f"Invalid endpoint code pair: {key}")
+    return True
 
 ### interpretation of the arrows and tail encoding
 ### https://rdrr.io/cran/pcalg/man/amatType.html#:~:text=in%20Package%20'pcalg'-,In%20pcalg:%20Methods%20for%20Graphical%20Models%20and%20Causal%20Inference,gac%20and%20the%20examples%20below).
+
 def adjmatrix_to_causal_tensor(adj_df: pd.DataFrame, strict: bool = True):
     """
     Convert Tetrad endpoint adjacency matrix (DataFrame) to a causal tensor.
@@ -87,6 +108,9 @@ def adjmatrix_to_causal_tensor(adj_df: pd.DataFrame, strict: bool = True):
             a_vu = int(adj_df.at[v_name, u_name])
             if a_uv == NULL and a_vu == NULL:
                 continue  # no adjacency
+
+            if check_edge_type(a_uv, a_vu) is not True:
+                raise ValueError(f"Invalid endpoint codes for pair ({u_name}, {v_name}): ({a_uv}, {a_vu})")
 
             # Determine directedness
             is_u_to_v = False
