@@ -1,0 +1,57 @@
+# ------------------------------------
+# 1. Byte-compiled / Optimized files
+# ------------------------------------
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+# helper_funcs/__pycache__/*.pyc
+
+# ------------------------------------
+# 2. Virtual Environment
+# ------------------------------------
+# Virtual environment folder names are common targets to ignore
+venv/
+.venv/
+env/
+/bin/
+
+# ------------------------------------
+# 3. Build Artifacts
+# ------------------------------------
+# Distribution / packaging
+dist/
+build/
+*.egg-info
+.tox/
+
+# ------------------------------------
+# 4. Operating System Files
+# ------------------------------------
+.DS_Store # macOS files
+Thumbs.db # Windows files
+
+# ------------------------------------
+# 5. IDE and Editor Files
+# ------------------------------------
+# VS Code
+.vscode/
+
+# PyCharm / IntelliJ
+.idea/
+
+# Vim/Nano swap files
+*.swp
+*~
+
+# ------------------------------------
+# 6. Data / Log / Output Files (Critical for ML/Benchmarking)
+# ------------------------------------
+# TCDF-specific or custom output folders
+/output/
+/data/raw_data/
+/data/processed/
+*.log
+
+# Jupyter Notebook Files
+.ipynb_checkpoints/
