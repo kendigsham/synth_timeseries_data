@@ -1,7 +1,7 @@
 import numpy as np
 
-def convert_true_graph_to_int(true_graph_matrix):
-    return true_graph_matrix.astype(int)
+# def convert_true_graph_to_int(true_graph_matrix):
+#     return true_graph_matrix.astype(int)
 
 
 def confusion_counts(gt_bool, pred_bool):
@@ -41,6 +41,37 @@ def shd_by_xor(gt_bool, pred_bool):
     """
     assert gt_bool.shape == pred_bool.shape
     return int(np.logical_xor(gt_bool, pred_bool).sum())
+
+def to_bool_edges(mat: np.ndarray) -> np.ndarray:
+    """
+    Convert numeric adjacency tensor to boolean directed-edge tensor.
+    Interpretation:
+      0 -> no edge
+      1 or 2 -> a single directed edge in the stored cell (i->j)
+      3 -> both directions (set both (i,j) and (j,i))
+    """
+    a = np.asarray(mat)
+    if a.ndim != 3:
+        raise ValueError("Input must be 3D array (p, p, L)")
+    p, p2, L = a.shape
+    if p != p2:
+        raise ValueError("First two dims must be equal (square matrices per lag)")
+    out = np.zeros_like(a, dtype=bool)
+    for i in range(p):
+        for j in range(p):
+            for k in range(L):
+                v = int(a[i, j, k])
+                if v == 0:
+                    continue
+                if v in (1, 2):
+                    out[i, j, k] = True
+                elif v == 3:
+                    out[i, j, k] = True
+                    out[j, i, k] = True
+                else:
+                    # treat any other positive value as a directed presence in stored cell
+                    out[i, j, k] = True
+    return out
 
 def shd_structural_hamming_with_self(gt_bool: np.ndarray, pred_bool: np.ndarray) -> int:
     """
