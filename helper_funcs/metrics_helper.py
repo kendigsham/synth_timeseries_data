@@ -48,7 +48,8 @@ def to_bool_edges(mat: np.ndarray) -> np.ndarray:
     Interpretation:
       0 -> no edge
       1 or 2 -> a single directed edge in the stored cell (i->j)
-      3 -> both directions (set both (i,j) and (j,i))
+      3 -> this is the undirected edge between 2 variables, I am treating it like one edge so that the score will not be too high
+      4 -> directed edge in both directions (set both (i,j) and (j,i))
     """
     a = np.asarray(mat)
     if a.ndim != 3:
@@ -66,6 +67,9 @@ def to_bool_edges(mat: np.ndarray) -> np.ndarray:
                 if v in (1, 2):
                     out[i, j, k] = True
                 elif v == 3:
+                    out[i, j, k] = True
+                    # out[j, i, k] = True
+                elif v == 4:
                     out[i, j, k] = True
                     out[j, i, k] = True
                 else:
